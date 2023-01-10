@@ -30,3 +30,12 @@
 #   Install Package:           'Ctrl + Shift + B'
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
+
+
+##### GIT
+# https://happygitwithr.com/existing-github-last.html
+# check website but it should be as simple as
+# 1. usethis::use_github()
+# 2. Stage everything using the git panel
+# 3. usethis::use_github()
+# (note this all assumes that SSH is set up and all that)
