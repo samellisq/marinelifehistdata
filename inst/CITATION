@@ -1,0 +1,12 @@
+citHeader("To cite marinelifehistdata in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "marinelifehistdata: marine life history data collection",
+  author   = "Samuel Ellis",
+  year     = "2023",
+  url      = "https://github.com/samellisq/marinelifehistdata",
+  textVersion = paste(
+
+  )
+)

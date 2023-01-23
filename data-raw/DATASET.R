@@ -4,6 +4,7 @@
 ##https://r-pkgs.org/data.html
 
 rm(list = ls())
+require(Matrix)
 require(tidyverse)
 
 # usethis::use_data(DATASET, overwrite = TRUE)
@@ -62,6 +63,22 @@ names(marine.lifehist.speciesdata)[1] = "species_names.key"
 agemat.df = read_csv("../Extra Data/species_age.maturity.csv")
 marine.lifehist.speciesdata[[2]] = agemat.df
 names(marine.lifehist.speciesdata)[2] = "species_age.maturity"
+
+#3
+sizedat.raw = read_csv("../Extra Data/species_size.csv")
+marine.lifehist.speciesdata[[3]] = sizedat.raw
+names(marine.lifehist.speciesdata)[3] = "species_raw.sizes"
+
+#4
+lengthdat.processed = read_csv("../../Analysis/Menopause Evolution II/size_length.estimates.csv")
+marine.lifehist.speciesdata[[4]] = lengthdat.processed
+names(marine.lifehist.speciesdata)[4] = "species_length"
+
+#5
+weightdat.procesed = read_csv("../../Analysis/Menopause Evolution II/size_weight.estimates.csv")
+marine.lifehist.speciesdata[[5]] = weightdat.procesed
+names(marine.lifehist.speciesdata)[5] = "species_mass"
+
 
 #### EXPORT to DATA folder
 setwd(current.wd)

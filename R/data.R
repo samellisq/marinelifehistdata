@@ -76,6 +76,9 @@
 #' \enumerate{
 #' \item{\emph{species_names.key}} data frame with species names and alternatives, as per International Whaling Commission Sept 2021
 #' \item{\emph{species_age.maturity}} data frame with species ages at maturity for each sex of each species. NAs indicate no data found
+#' \item{\emph{species_raw.sizes}} data frame raw size data extracted from the literature. measuremtn = length/mass/girth. Type = type of measure reported. n = sample size (Where reported), and if estimated = 1 authros refer to the values reported as estimates.
+#' \item{\emph{species_length}} data frame with processed length data for each species-sex. Methods in Ellis et al 2023. All derived from species_raw.sizes.
+#' \item{\emph{species_mass}} data frame with processed mass data for each species-sex. Methods as in for length outlined in Ellis et al 2023. All derived from species_raw.sizes.
 #' }
 #'
 "marine.lifehist.speciesdata"
