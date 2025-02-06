@@ -1,9 +1,34 @@
 #' Function converting  marine.lifehist.data to input for a marine survival model
 #'
 #'@export
-create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
+create_marinesurvival_modinput = function(datasets.list, min.sample.size = 0){
 
   datasets.key = dplyr::filter(marine.lifehist.datakey, dataset %in% names(datasets.list))
+
+  ### Remove datasets with no samples> age at amturity
+  datasets.key =
+    dplyr::left_join(datasets.key,
+                     marine.lifehist.speciesdata$species_age.maturity %>%
+                       dplyr::select(species, sex, age.mat)
+    )
+  new.datasets.list = list()
+  name.keep = rep("TRUE", length(datasets.list))
+  for(i in 1:length(datasets.list)){
+    agemati = dplyr::filter(datasets.key, dataset == names(datasets.list[i]))$age.mat
+    dataseti = datasets.list[[i]]
+    filtered.dataset = dplyr::filter(dataseti, age> agemati)
+    if(nrow(filtered.dataset) > 0){
+      new.datasets.list[[i]] = filtered.dataset
+    } else {
+      new.datasets.list[[i]] = NULL
+      name.keep[i] = FALSE
+      warning(paste("Dataset ", datasets.list[[i]]$dataset[1], " dropped as contains no adult samples", sep =""))
+    }
+  }
+  names(new.datasets.list) = names(datasets.list)[name.keep== TRUE]
+  datasets.list = purrr::compact(new.datasets.list)
+  datasets.key = dplyr::filter(datasets.key, dataset %in% names(datasets.list))
+
 
 
   ## NUMBER DATASETS AND SPECIES
@@ -45,11 +70,11 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
 
     population.key =
       dplyr::bind_rows(population.key,
-                marine.lifehist.datasetextras$datasetsextras_populations.key %>%
-                  dplyr::filter(dataset %in% datasets.key$dataset) %>%
-                  dplyr::mutate(pop.identifier.recount = pop.identifier - min(pop.identifier, na.rm = TRUE) +1) %>%
-                  dplyr::mutate(pop.num = pop.identifier.recount + max(population.key$pop.num)) %>%
-                  dplyr::select(dataset, pop.num)
+                       marine.lifehist.datasetextras$datasetsextras_populations.key %>%
+                         dplyr::filter(dataset %in% datasets.key$dataset) %>%
+                         dplyr::mutate(pop.identifier.recount = pop.identifier - min(pop.identifier, na.rm = TRUE) +1) %>%
+                         dplyr::mutate(pop.num = pop.identifier.recount + max(population.key$pop.num)) %>%
+                         dplyr::select(dataset, pop.num)
       ) %>%
       dplyr::arrange(dataset)
   }
@@ -58,11 +83,12 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
 
 
   ##Rearrange age sample for input (output: by age, and samples long)
-  datasets.key =
-    dplyr::left_join(datasets.key,
-              marine.lifehist.speciesdata$species_age.maturity %>%
-                dplyr::select(species, sex, age.mat)
-    )
+  # datasets.key =
+  #   dplyr::left_join(datasets.key,
+  #                    marine.lifehist.speciesdata$species_age.maturity %>%
+  #                      dplyr::select(species, sex, age.mat)
+  #   )
+
 
 
   ## REARRAGE AGE SAMPLES TO FORM INPUTS
@@ -84,7 +110,7 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
     )
     samples.i = dplyr::filter(samples.i, age.adj >=0) # because some datasets  include juveniles
 
-    if(nrow(samples.i) < 3){
+    if(nrow(samples.i) < min.sample.size){
       warning(paste("Dataset ", datasets.key$dataset[i] , " contains fewer than adult samples than the min sample size and has been removed", sep = ""))
       datasets.key$include[i] = "N"
     } else { # as long as it has enough samples
@@ -113,6 +139,8 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
 
   }
 
+
+
   samples.df = dplyr::bind_rows(samples.list)
   byage = dplyr::bind_rows(byage.list)
 
@@ -124,26 +152,30 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
       pop.num = sort(unique(datasets.key$pop.num)),
       pop.renum = seq(1, length(unique(datasets.key$pop.num)), 1)
     )
+
     datasets.key =
       dplyr::left_join(datasets.key, pop.renumber.df) %>%
       dplyr::mutate(pop.num = pop.renum) %>%
       select(-pop.renum)
 
     samples.df =
-      dplyr::left_join(samples.df, pop.renumber.df) %>%
-      dplyr::mutate(pop.num = pop.renum) %>%
-      select(-pop.renum)
+      dplyr::left_join(samples.df,
+                       datasets.key %>%
+                         select(dataset.num, pop.num)
+      )
 
     byage =
-      dplyr::left_join(byage, pop.renumber.df) %>%
-      dplyr::mutate(pop.num = pop.renum) %>%
-      select(-pop.renum)
+      dplyr::left_join(byage, datasets.key %>%
+                         select(dataset.num, pop.num)
+      )
+
   }
   if(length(datasets.key$species.num) != max(datasets.key$species.num)){
     species.renum.df = data.frame(
       species.num = sort(unique(datasets.key$species.num)),
       species.renum = seq(1, length(unique(datasets.key$species.num)), 1)
     )
+
     datasets.key =
       dplyr::left_join(datasets.key, species.renum.df) %>%
       dplyr::mutate(species.num = species.renum) %>%
@@ -160,6 +192,7 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
       select(-species.renum)
 
   }
+
 
   ### GET MAX AGES
   maxages = numeric(max(byage$dataset.num))
@@ -182,6 +215,7 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 3){
 
   ## PRIORS
   priors = marinesurvival::get_gomp_prior_shapes()
+
 
   ## PUT IT ALL TOGETHER
   mod.list = list(

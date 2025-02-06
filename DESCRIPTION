@@ -14,7 +14,8 @@ RoxygenNote: 7.1.2
 Imports: 
     magrittr,
     dplyr,
-    stringr
+    stringr,
+    purrr
 Suggests: 
     rmarkdown,
     knitr
