@@ -156,7 +156,7 @@ create_marinesurvival_modinput = function(datasets.list, min.sample.size = 0){
     datasets.key =
       dplyr::left_join(datasets.key, pop.renumber.df) %>%
       dplyr::mutate(pop.num = pop.renum) %>%
-      select(-pop.renum)
+      dplyr::select(-pop.renum)
 
     samples.df =
       dplyr::left_join(samples.df,
